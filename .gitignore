@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+data/
+data_sim/
+data_local/
+runs/
+*.pt
+*.db
+*.tmp
+.DS_Store

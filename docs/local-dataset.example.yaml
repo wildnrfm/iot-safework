@@ -1,0 +1,19 @@
+# Contoh dataset lokal (format Ultralytics YOLO). Salin, ubah path, lalu pakai sebagai data=... saat melatih.
+# Nama kelas harus cocok dengan label kanonis di safework/labels.py (atau tambahkan alias di sana).
+path: data_local/dataset      # berisi images/train, images/val, labels/train, labels/val
+train: images/train
+val: images/val
+names:
+  0: person
+  1: helmet
+  2: vest
+  3: gloves
+  4: boots
+  5: goggles
+  6: mask
+  7: no_helmet
+  8: no_vest        # ada di Construction-PPE versi November 2026; tetap tambah contoh lokal
+  9: no_gloves
+  10: no_boots
+  11: no_goggle
+  12: no_mask       # tidak ada di dataset publik yang dirujuk: buat dari foto lokal

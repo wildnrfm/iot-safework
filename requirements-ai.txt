@@ -1,0 +1,3 @@
+# Mode nyata (model YOLO). Ultralytics menarik PyTorch, jadi unduhannya besar.
+-r requirements.txt
+ultralytics>=8.3

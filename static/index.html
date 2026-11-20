@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAFEWORK AI — Pos cek APD</title>
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --ink: #16243a;
+    --muted: #5b6b7f;
+    --navy: #17365d;
+    --green: #26734d;
+    --page: #f3f5f8;
+    --surface: #ffffff;
+    --line: #d6dde7;
+    --ok: #1f7a4d;   --ok-bg: #e3f3ea;
+    --warn: #b27a00; --warn-bg: #fff1cc;
+    --bad: #b3261e;  --bad-bg: #fbe4e2;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+    color: var(--ink);
+    background: var(--page);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; line-height: 1.45; }
+  :focus-visible { outline: 3px solid #2b6cb0; outline-offset: 2px; }
+  header.top { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; align-items: center; justify-content: space-between;
+               padding: 0.9rem 1.25rem; background: var(--navy); color: #fff; }
+  header.top h1 { margin: 0; font-size: 1.25rem; letter-spacing: 0.01em; }
+  .controls { display: flex; flex-wrap: wrap; gap: 0.5rem 0.75rem; align-items: center; font-size: 0.95rem; }
+  select, button { font: inherit; padding: 0.4rem 0.7rem; border-radius: 6px; border: 1px solid #9fb0c6; background: #fff; color: var(--ink); }
+  button { cursor: pointer; }
+  button[aria-pressed="true"] { background: var(--green); color: #fff; border-color: var(--green); }
+  main { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(320px, 1fr); gap: 1.25rem; padding: 1.25rem; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+
+  .video { background: #0f1722; border-radius: 10px; overflow: hidden; aspect-ratio: 16 / 9; display: grid; place-items: center; }
+  .video img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-left: 12px solid var(--line); border-radius: 10px;
+           padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+  .panel[data-tone="checking"] { border-left-color: var(--navy); }
+  .panel[data-tone="ok"]   { background: var(--ok-bg);   border-left-color: var(--ok); }
+  .panel[data-tone="warn"] { background: var(--warn-bg); border-left-color: var(--warn); }
+  .panel[data-tone="bad"]  { background: var(--bad-bg);  border-left-color: var(--bad); }
+  .panel-head { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+  .headline { margin: 0; font-size: clamp(2rem, 5vw, 3.4rem); font-weight: 700; line-height: 1.08; }
+  .detail { margin: 0.4rem 0 0; font-size: 1.2rem; max-width: 34ch; }
+
+  .lamps { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.6rem; background: #1b2635; border-radius: 14px; flex: none; }
+  .lamp { width: 2.1rem; height: 2.1rem; border-radius: 50%; opacity: 0.22; }
+  .lamp.green { background: #2fbf71; } .lamp.yellow { background: #f2b705; } .lamp.red { background: #ef4b43; }
+  .lamps[data-lamp="GREEN"] .green, .lamps[data-lamp="YELLOW"] .yellow, .lamps[data-lamp="RED"] .red,
+  .lamps[data-lamp="FAULT"] .yellow { opacity: 1; box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.22); }
+  .lamps[data-lamp="FAULT"] .yellow { animation: blink 1s steps(2, start) infinite; }
+  @keyframes blink { to { opacity: 0.22; } }
+  @media (prefers-reduced-motion: reduce) { .lamps[data-lamp="FAULT"] .yellow { animation: none; } }
+
+  .items { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
+  .item { display: grid; grid-template-columns: 1.8rem 1fr auto; align-items: center; gap: 0.5rem; padding: 0.45rem 0.6rem;
+          background: rgba(255, 255, 255, 0.7); border-radius: 6px; font-size: 1.05rem; }
+  .item .mark { font-weight: 700; text-align: center; }
+  .item[data-state="terpenuhi"] .mark { color: var(--ok); }
+  .item[data-state="tidak_terpenuhi"] .mark { color: var(--bad); }
+  .item[data-state="tidak_dapat_dipastikan"] .mark { color: var(--warn); }
+  .item .state { color: var(--muted); font-size: 0.95rem; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 0.4rem 0.9rem; color: var(--muted); font-size: 0.9rem; margin-top: auto; }
+
+  .lower { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(320px, 1fr); gap: 1.25rem; padding: 0 1.25rem 1.5rem; }
+  @media (max-width: 900px) { .lower { grid-template-columns: 1fr; } }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1rem 1.25rem; overflow-x: auto; }
+  .card h2 { margin: 0 0 0.6rem; font-size: 1.05rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+  th, td { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; }
+  tr[data-status="lengkap"] td:nth-child(3) { color: var(--ok); font-weight: 600; }
+  tr[data-status="belum_lengkap"] td:nth-child(3) { color: var(--bad); font-weight: 600; }
+  tr[data-status="tidak_dapat_dipastikan"] td:nth-child(3) { color: var(--warn); font-weight: 600; }
+  td.empty { color: var(--muted); }
+  dl { margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 0.35rem 1rem; }
+  dt { color: var(--muted); } dd { margin: 0; font-weight: 600; text-align: right; }
+  a { color: #1d5fa8; }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>SAFEWORK AI — Pos cek APD</h1>
+  <div class="controls">
+    <label for="profile">Profil pekerjaan</label>
+    <select id="profile"></select>
+    <button id="sound" type="button" aria-pressed="false">Aktifkan suara</button>
+    <button id="test" type="button">Uji lampu dan buzzer</button>
+  </div>
+</header>
+
+<main>
+  <section class="video" aria-label="Tampilan kamera">
+    <img id="video" src="/stream.mjpg" alt="Tampilan kamera pos cek">
+  </section>
+
+  <section id="panel" class="panel" data-tone="idle" aria-live="polite">
+    <div class="panel-head">
+      <div>
+        <p id="headline" class="headline">Menunggu pekerja</p>
+        <p id="detail" class="detail">Berdiri di penanda dan hadap kamera.</p>
+      </div>
+      <div id="lamps" class="lamps" data-lamp="OFF" role="img" aria-label="Lampu mati">
+        <span class="lamp green"></span><span class="lamp yellow"></span><span class="lamp red"></span>
+      </div>
+    </div>
+    <ul id="items" class="items"></ul>
+    <div class="chips">
+      <span id="chip-mode"></span><span id="chip-cam"></span><span id="chip-esp"></span><span id="chip-fps"></span>
+    </div>
+  </section>
+</main>
+
+<section class="lower">
+  <div class="card">
+    <h2>Riwayat pemeriksaan</h2>
+    <table>
+      <thead><tr><th>Waktu</th><th>Profil</th><th>Hasil</th><th>APD kurang atau belum terlihat</th></tr></thead>
+      <tbody id="history"></tbody>
+    </table>
+  </div>
+  <div class="card">
+    <h2>Ringkasan</h2>
+    <dl id="summary"></dl>
+    <p><a href="/api/history.csv" download>Unduh riwayat (CSV)</a></p>
+  </div>
+</section>
+
+<script>
+'use strict';
+const $ = (sel) => document.querySelector(sel);
+const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const STATUS_LABEL = { lengkap: 'Lengkap', belum_lengkap: 'Belum lengkap', tidak_dapat_dipastikan: 'Tidak dapat dipastikan' };
+const ITEM_MARK = {
+  terpenuhi: ['✓', 'Terpenuhi'],
+  tidak_terpenuhi: ['✕', 'Belum dipakai'],
+  tidak_dapat_dipastikan: ['?', 'Tidak terlihat jelas'],
+};
+const LAMP_LABEL = { OFF: 'mati', GREEN: 'hijau', YELLOW: 'kuning', RED: 'merah', FAULT: 'kuning berkedip (gangguan)' };
+const app = { sound: false, ctx: null, lastBeep: null, lastTest: null, testUntil: 0, profileSig: '' };
+
+function toneOf(s) {
+  if (s.phase === 'gangguan') return 'bad';
+  if (s.phase === 'hasil') return { lengkap: 'ok', belum_lengkap: 'bad', tidak_dapat_dipastikan: 'warn' }[s.status] || 'idle';
+  if (s.phase === 'memeriksa') return 'checking';
+  return 'idle';
+}
+
+function lampOf(s) {
+  const remaining = app.testUntil - Date.now();
+  if (remaining > 0) return ['RED', 'YELLOW', 'GREEN'][Math.min(Math.floor(remaining / 500), 2)];  // urutan uji: hijau, kuning, merah
+  return (s.indicator && s.indicator.lamp) || 'OFF';
+}
+
+function beep(times) {
+  if (!app.ctx) return;
+  const ctx = app.ctx;
+  const t0 = ctx.currentTime;
+  for (let i = 0; i < times; i++) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.value = 880;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    const start = t0 + i * 0.35;
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(0.25, start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.2);
+    osc.start(start);
+    osc.stop(start + 0.22);
+  }
+}
+
+function setLamp(lamp) {
+  const el = $('#lamps');
+  el.dataset.lamp = lamp;
+  el.setAttribute('aria-label', 'Lampu ' + LAMP_LABEL[lamp]);
+}
+
+function render(s) {
+  $('#panel').dataset.tone = toneOf(s);
+  $('#headline').textContent = s.headline;
+  $('#detail').textContent = s.detail;
+  $('#items').innerHTML = (s.items || []).map((i) => {
+    const [mark, text] = ITEM_MARK[i.state];
+    const note = i.requirement === 'opsional' ? ' (opsional)' : '';
+    return `<li class="item" data-state="${esc(i.state)}"><span class="mark" aria-hidden="true">${mark}</span>` +
+           `<span class="name">${esc(i.name)}${note}</span><span class="state">${text}</span></li>`;
+  }).join('');
+
+  const ind = s.indicator || {};
+  if (app.lastBeep !== null && ind.beep_seq !== app.lastBeep && app.sound) beep(3);
+  app.lastBeep = ind.beep_seq;
+  if (app.lastTest !== null && ind.test_seq !== app.lastTest) {
+    app.testUntil = Date.now() + 1500;
+    if (app.sound) beep(1);
+  }
+  app.lastTest = ind.test_seq;
+  setLamp(lampOf(s));
+
+  const ser = ind.serial;
+  $('#chip-mode').textContent = s.mode === 'simulasi' ? 'Mode simulasi' : 'Mode nyata';
+  $('#chip-cam').textContent = s.camera_ok ? 'Kamera aktif' : 'Kamera terputus';
+  $('#chip-esp').textContent = ser ? 'ESP32 ' + (ser.connected ? 'terhubung' : 'belum terhubung') + ' (' + ser.port + ')'
+                                   : 'ESP32 tidak dipakai (lampu virtual)';
+  $('#chip-fps').textContent = (s.fps || 0).toFixed(1) + ' FPS';
+}
+
+function renderOffline() {
+  $('#panel').dataset.tone = 'bad';
+  $('#headline').textContent = 'Server tidak terjangkau';
+  $('#detail').textContent = 'Pastikan aplikasi berjalan (python -m safework), lalu muat ulang halaman.';
+  $('#items').innerHTML = '';
+  setLamp('OFF');
+}
+
+function renderHistory(rows) {
+  $('#history').innerHTML = rows.length ? rows.map((r) => {
+    const gaps = r.missing_names.concat(r.uncertain_names.map((n) => n + ' (?)')).join(', ') || '-';
+    return `<tr data-status="${esc(r.status)}"><td>${esc(r.ts.slice(11, 19))}</td><td>${esc(r.profile_name)}</td>` +
+           `<td>${esc(STATUS_LABEL[r.status] || r.status)}</td><td>${esc(gaps)}</td></tr>`;
+  }).join('') : '<tr><td colspan="4" class="empty">Belum ada pemeriksaan. Hasil akan muncul di sini.</td></tr>';
+}
+
+function renderSummary(s) {
+  const rate = s.first_try_complete_rate;
+  const first = (rate === null || rate === undefined) ? '-' : Math.round(rate * 100) + '% dari ' + s.first_try_total;
+  const top = (s.top_missing || []).map((m) => esc(m.name) + ' (' + m.count + ')').join(', ') || '-';
+  $('#summary').innerHTML = `<dt>Jumlah pemeriksaan</dt><dd>${s.total || 0}</dd>` +
+    `<dt>Lengkap pada percobaan pertama</dt><dd>${first}</dd>` +
+    `<dt>APD yang paling sering terlewat</dt><dd>${top}</dd>`;
+}
+
+async function adminFetch(url, options = {}) {
+  const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers || {});
+  const token = sessionStorage.getItem('adminToken');
+  if (token) headers['X-Admin-Token'] = token;
+  let res = await fetch(url, Object.assign({}, options, { headers }));
+  if (res.status === 401) {
+    const entered = window.prompt('Token admin:');
+    if (!entered) return res;
+    sessionStorage.setItem('adminToken', entered);
+    headers['X-Admin-Token'] = entered;
+    res = await fetch(url, Object.assign({}, options, { headers }));
+  }
+  return res;
+}
+
+async function loadProfiles() {
+  const data = await (await fetch('/api/profiles', { cache: 'no-store' })).json();
+  const sig = JSON.stringify([data.active, data.profiles.map((p) => p.id + p.name)]);
+  if (sig === app.profileSig) return;
+  app.profileSig = sig;
+  $('#profile').innerHTML = data.profiles.map((p) =>
+    `<option value="${esc(p.id)}"${p.id === data.active ? ' selected' : ''}>${esc(p.name)}</option>`).join('');
+}
+
+async function loadHistory() {
+  const [h, s] = await Promise.all([
+    fetch('/api/history?limit=10', { cache: 'no-store' }),
+    fetch('/api/summary', { cache: 'no-store' }),
+  ]);
+  renderHistory(await h.json());
+  renderSummary(await s.json());
+}
+
+async function poll() {
+  try {
+    const res = await fetch('/api/state', { cache: 'no-store' });
+    if (!res.ok) throw new Error(String(res.status));
+    render(await res.json());
+  } catch (err) {
+    renderOffline();
+  } finally {
+    setTimeout(poll, 400);
+  }
+}
+
+function init() {
+  $('#profile').addEventListener('change', async (e) => {
+    const res = await adminFetch('/api/profiles/active', { method: 'POST', body: JSON.stringify({ id: e.target.value }) });
+    if (!res.ok) { app.profileSig = ''; }
+    loadProfiles().catch(() => {});
+  });
+  $('#test').addEventListener('click', () => { adminFetch('/api/indicator/test', { method: 'POST' }).catch(() => {}); });
+  $('#sound').addEventListener('click', () => {
+    app.sound = !app.sound;
+    if (app.sound && !app.ctx) app.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (app.ctx && app.ctx.state === 'suspended') app.ctx.resume();
+    $('#sound').setAttribute('aria-pressed', String(app.sound));
+    $('#sound').textContent = app.sound ? 'Suara aktif' : 'Aktifkan suara';
+  });
+  $('#video').addEventListener('error', () => {
+    setTimeout(() => { $('#video').src = '/stream.mjpg?ts=' + Date.now(); }, 2000);
+  });
+  loadProfiles().catch(() => {});
+  loadHistory().catch(() => {});
+  poll();
+  setInterval(() => { loadHistory().catch(() => {}); loadProfiles().catch(() => {}); }, 3000);
+}
+
+if (!window.__SAFEWORK_TEST__) init();
+</script>
+</body>
+</html>
