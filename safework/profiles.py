@@ -14,20 +14,23 @@ _ID_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 
 def default_profiles() -> list[Profile]:
-    R, O = Requirement.REQUIRED, Requirement.OPTIONAL
+    required = Requirement.REQUIRED
+    optional = Requirement.OPTIONAL
     return [
         Profile(
             id="penyemprot-pestisida",
             name="Penyemprot Pestisida",
             description="Contoh konfigurasi. Sesuaikan dengan label produk dan penilaian risiko.",
-            rules=[PpeRule("mask", R), PpeRule("gloves", R), PpeRule("goggles", R), PpeRule("boots", R)],
+            rules=[PpeRule("mask", required), PpeRule("gloves", required),
+                   PpeRule("goggles", required), PpeRule("boots", required)],
         ),
         Profile(
             id="pekerja-proyek-desa",
             name="Pekerja Proyek Desa",
             description="Contoh konfigurasi. Sesuaikan dengan aktivitas dan bahaya di lokasi.",
-            rules=[PpeRule("helmet", R), PpeRule("vest", R), PpeRule("boots", R), PpeRule("gloves", R),
-                   PpeRule("goggles", O)],
+            rules=[PpeRule("helmet", required), PpeRule("vest", required),
+                   PpeRule("boots", required), PpeRule("gloves", required),
+                   PpeRule("goggles", optional)],
         ),
     ]
 

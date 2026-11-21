@@ -5,12 +5,13 @@ from pathlib import Path
 
 from safework.checkpoint import Checkpoint, CheckpointConfig
 from safework.config import Settings
-from safework.fakes import ScriptedDetector, SyntheticSource, scene
+from safework.fakes import ScriptedDetector, SyntheticSource
 from safework.indicators import MultiIndicator, VirtualIndicator
 from safework.profiles import ProfileStore
 from safework.runner import Runner, RunnerConfig
 from safework.service import Service
 from safework.storage import HistoryStore
+from safework.app import create_app
 
 from .helpers import wait_for
 
@@ -59,6 +60,25 @@ def build(source, detector_factory, runner_cfg=None):
 
 
 class PipelineTests(unittest.TestCase):
+    def test_smoke_endpoint_fastapi(self):
+        from fastapi.testclient import TestClient
+
+        tmp, svc, _ = build(SyntheticSource(64, 64), lambda p: ScriptedDetector(p.active))
+        self.addCleanup(tmp.cleanup)
+        app = create_app(svc)
+
+        with TestClient(app) as client:
+            self.assertEqual(client.get("/").status_code, 200)
+            self.assertEqual(client.get("/api/state").status_code, 200)
+            self.assertEqual(client.get("/api/history.csv").status_code, 200)
+            self.assertEqual(client.post("/api/profiles/active", json={"id": "pekerja-proyek-desa"}).status_code, 401)
+            allowed = client.post(
+                "/api/profiles/active",
+                json={"id": "pekerja-proyek-desa"},
+                headers={"X-Admin-Token": "rahasia"},
+            )
+            self.assertEqual(allowed.status_code, 200)
+
     def test_simulasi_menghasilkan_riwayat_lampu_dan_video(self):
         tmp, svc, virtual = build(SyntheticSource(320, 180),
                                   lambda p: ScriptedDetector(p.active, present_seconds=1.5, gap_seconds=0.6))

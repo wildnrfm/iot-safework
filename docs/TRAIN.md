@@ -50,11 +50,16 @@ untuk pelanggaran, bukan deteksi berturut-turut. Perbaikan utama datang dari fot
 3. Anotasi dengan alat seperti CVAT atau Label Studio memakai daftar kelas di `docs/local-dataset.example.yaml`.
    Wajib menambah `mask` dan `no_mask` (tidak ada di Construction-PPE). Untuk APD lain, tambah contoh `no_*`
    sebanyak mungkin, terutama `no_goggle` (recall baseline hanya 0,27).
-4. Latih ulang dari bobot sebelumnya:
-```bash
-yolo detect train data=docs/local-dataset.yaml model=runs/ppe-v1/weights/best.pt epochs=60 imgsz=640 name=ppe-v2
+4. Salin konfigurasi contoh lalu ubah path datanya:
+```powershell
+Copy-Item docs/local-dataset.example.yaml docs/local-dataset.yaml
 ```
-Pisahkan data uji berdasarkan orang atau sesi, bukan acak antar foto, supaya hasil uji tidak terlalu optimis.
+Kemudian latih ulang dari bobot sebelumnya:
+```bash
+yolo detect train data=docs/local-dataset.yaml model=runs/ppe-v1/weights/best.pt epochs=60 imgsz=640 project=runs name=ppe-v2-local
+```
+Bobot hasil ada di `runs/ppe-v2-local/weights/best.pt`. Pisahkan data uji berdasarkan orang atau sesi, bukan
+acak antar foto, supaya hasil uji tidak terlalu optimis.
 
 ## 4. Menggabungkan dataset (hati-hati)
 Dataset tanpa kelas "tidak dipakai" (mis. PPE_Detection) jangan langsung dicampur dengan yang memilikinya.
@@ -63,9 +68,11 @@ deteksi `no_*`. Pilihan: relabel sebagian gambar, hanya ambil kelas positif yang
 (mis. mask), atau isi kelas `no_*` dari data lokal.
 
 ## 5. Pakai di aplikasi
+
 ```bash
-python -m safework --weights runs/ppe-v2/weights/best.pt --serial COM5
+python -m safework --weights runs/ppe-v2-local/weights/best.pt --serial COM5
 ```
+Bila memakai notebook v2, bobot hasil Colab berada di `runs/ppe-v2-yolo11n/weights/best.pt`.
 Bila nama kelas model berbeda, tambahkan alias di `safework/labels.py` (ALIASES). Kelas yang tidak dikenal
 diabaikan, dan APD yang kelasnya tidak ada pada model otomatis berstatus "tidak dapat dipastikan".
 Periksa lisensi sebelum dikembangkan menjadi produk: pustaka Ultralytics AGPL-3.0; dataset Construction-PPE
