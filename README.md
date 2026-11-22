@@ -102,10 +102,12 @@ docs/
   notebooks/             train_ppe_v1_colab.ipynb, train_ppe_v2_colab.ipynb
   local-dataset.example.yaml
 data/                    profil dan riwayat lokal (tidak masuk Git)
-runs/                    output latihan dan bobot model (tidak masuk Git)
+runs/                    baseline v1 dan arsip eksperimen v2 terpilih
 ```
 
-Data runtime, dataset lokal, environment virtual, dan output latihan diabaikan Git melalui `.gitignore`.
+Data runtime, dataset lokal, environment virtual, dan output latihan baru diabaikan Git melalui `.gitignore`.
+Arsip eksperimen yang sudah dipilih untuk dibagikan ada di `runs/ppe-v2-ft1/` dan
+`runs/ppe-v2-yolo11n/`; termasuk checkpoint per-epoch, konfigurasi, metrik, dan plot.
 
 ## Testing
 
@@ -116,13 +118,21 @@ ruff check --select E4,E7,E9,F safework scripts tests
 
 ## Pelatihan Model
 
-Model baseline tersedia di `runs/ppe-v1/weights/best.pt`.
+Model baseline tersedia di `runs/ppe-v1/weights/best.pt`; notebook v2 memakai bobot ini sebagai titik awal.
 Notebook gabungan model v2 berada di [docs/notebooks/train_ppe_v2_colab.ipynb](docs/notebooks/train_ppe_v2_colab.ipynb).
 
-Hasil eksperimen v2 saat ini berada di `runs/ppe-v2-yolo11n/weights/best.pt`.
-Evaluasi awal mendapatkan mAP50 0,763 pada Construction-PPE (baseline 0,770) dan 0,357 pada PPEs test.
+Arsip eksperimen v2:
+
+- `runs/ppe-v2-yolo11n/weights/best.pt`: model yang dilatih dari YOLO11n.
+- `runs/ppe-v2-ft1/weights/best.pt`: model fine-tune dari baseline v1.
+- `ppe-v2-yolo11n.pt` dan `ppe-v2-ft1.pt` adalah salinan ekspor `best.pt` untuk diunduh.
+
+Evaluasi awal model `ppe-v2-yolo11n` mendapatkan mAP50 0,763 pada Construction-PPE (baseline 0,770)
+dan 0,357 pada PPEs test.
 Namun, data latih tidak memiliki label `mask` maupun `no_mask`, sehingga AP50 kedua kelas tersebut 0.
-Model ini **belum layak untuk pemeriksaan masker**; pertahankan baseline v1 untuk kelas lainnya.
+Hasil tersebut hanya berlaku untuk eksperimen `ppe-v2-yolo11n`, bukan `ppe-v2-ft1`.
+Jangan gunakan model v2 untuk pemeriksaan operasional sebelum mengevaluasi hasil terbaru pada data uji
+independen dan alat peraga di lokasi.
 
 Notebook v2 menggabungkan Construction-PPE dan PPEs Dataset menjadi 14 kelas. Sebelum memakai hasil latihan
 berikutnya, pastikan ringkasan notebook menunjukkan contoh `mask` dan `no_mask` pada data latih.

@@ -72,7 +72,9 @@ deteksi `no_*`. Pilihan: relabel sebagian gambar, hanya ambil kelas positif yang
 ```bash
 python -m safework --weights runs/ppe-v2-local/weights/best.pt --serial COM5
 ```
-Bila memakai notebook v2, bobot hasil Colab berada di `runs/ppe-v2-yolo11n/weights/best.pt`.
+Bila memakai notebook v2, bobot fine-tune berada di `runs/ppe-v2-ft1/weights/best.pt`; eksperimen
+yang dilatih dari YOLO11n berada di `runs/ppe-v2-yolo11n/weights/best.pt`. Arsip eksperimen terpilih
+beserta konfigurasi, checkpoint, metrik, dan plot disimpan di repository.
 Bila nama kelas model berbeda, tambahkan alias di `safework/labels.py` (ALIASES). Kelas yang tidak dikenal
 diabaikan, dan APD yang kelasnya tidak ada pada model otomatis berstatus "tidak dapat dipastikan".
 Periksa lisensi sebelum dikembangkan menjadi produk: pustaka Ultralytics AGPL-3.0; dataset Construction-PPE
